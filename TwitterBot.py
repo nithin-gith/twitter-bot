@@ -1,4 +1,5 @@
 import tweepy
+import time
 
 from os import environ as env
 
@@ -21,7 +22,28 @@ try:
 except:
     print("not so cool")
 
-api.update_status(status = 'Hello World from Python')
-# user = api.get_user(screen_name='SiriguppaNithin')
-# id = user.id
-# api.send_direct_message(id,"Hello")
+my_id = api.get_user(screen_name="bot_jff").id
+mention_id=1
+reply = "Please check your DM"
+message = "Hello, How may I help You :)"
+
+
+while 1 :
+    mentions=api.mentions_timeline(since_id=mention_id)
+    for mention in mentions:
+        if mention.created_at.timestamp()<time.time():
+            continue
+        print("Mention tweet found!")
+        mention_id = mention.id
+        if mention.author.id != my_id and mention.in_reply_to_status_id is None:
+            api.send_direct_message(mention.author.id,message)
+            try:
+                api.update_status(reply,in_reply_to_mention_status_id=mention.id_str)
+                print("replying")
+            except:
+                print("failed")
+# while 1:
+#     mentions = api.mentions_timeline()
+#     for mention in mentions:
+#         print(mention.author.id)
+
