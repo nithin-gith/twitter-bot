@@ -1,4 +1,3 @@
-from json import load
 import tweepy
 import time
 
@@ -26,12 +25,6 @@ try:
 except:
     print("not so cool")
 
-my_id = int(api.get_user(screen_name="bot_jff").id_str)
-mention_id=1
-
-FILE_NAME = "last_id.txt"
-
-
 def get_last_id(FILE_NAME):
     file_read = open(FILE_NAME,'r')
     mention_id = int(file_read.read().strip())
@@ -44,9 +37,14 @@ def set_last_id(FILE_NAME,mention_id):
     file_write.close()
     return
 
+FILE_NAME = "last_id.txt"
+my_id = int(api.get_user(screen_name="bot_jff").id_str)
+mention_id=get_last_id(FILE_NAME)
+
 while True:
     mentions = api.mentions_timeline(since_id=mention_id)
     for mention in mentions:
+        print("got here")
         mention_text = mention.text
         print(mention_text)   
         text_analysis = tb(mention_text)
@@ -73,7 +71,8 @@ while True:
                     api.send_direct_message(recipient_id=mention.author.id,text="Hi "+mention.author.name+", Please fill the below attached feedback form and help us improve :)")
                 except Exception as err:
                     print(err)
-        mention_id = mention.id
+        mention_id=mention.id
+        set_last_id(FILE_NAME,mention.id)
     time.sleep(5)
 
 
