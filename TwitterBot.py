@@ -6,7 +6,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-print(os.getenv("CONSUMER_KEY"))
+
+from textblob import TextBlob as tb
 
 
 consumer_key=os.getenv("CONSUMER_KEY")
@@ -25,51 +26,68 @@ try:
 except:
     print("not so cool")
 
-my_id = api.get_user(screen_name="SiriguppaNithin").id
+my_id = int(api.get_user(screen_name="bot_jff").id_str)
 mention_id=1
-reply = "Please check your DM"
-message = "Hello, How may I help You :)"
 
-# api.send_direct_message(my_id, "Hi Bro from python")
+FILE_NAME = "last_id.txt"
 
-mentions = api.mentions_timeline(count=1)
+
+def get_last_id(FILE_NAME):
+    file_read = open(FILE_NAME,'r')
+    mention_id = int(file_read.read().strip())
+    file_read.close()
+    return mention_id
+
+def set_last_id(FILE_NAME,mention_id):
+    file_write=open(FILE_NAME,'w')
+    file_write.write(str(mention_id))
+    file_write.close()
+    return
+
 while True:
+    mentions = api.mentions_timeline(since_id=mention_id)
     for mention in mentions:
-        print(mention.text)
+        mention_text = mention.text
+        print(mention_text)   
+        text_analysis = tb(mention_text)
+        analysis_polarity = text_analysis.sentiment.polarity
+        print(analysis_polarity)
+        if mention.in_reply_to_status_id is None and mention.author.id != my_id:
+            if analysis_polarity>=0:
+                if analysis_polarity<0.3:
+                    try:
+                        api.create_favorite(id=mention.id)
+                    except Exception as err:
+                        print(err)
+                else:
+                    try:
+                        api.create_favorite(id=mention.id)
+                        api.retweet(id=mention.id)
+                        print(mention.id)
+                        api.update_status(status="Hi "+mention.author.name+", Thank you so much for your wonderful words ;)",in_reply_to_status_id=mention.id,auto_populate_reply_metadata=True)
+                    except Exception as err:
+                        print(err)
+            else:
+                try:
+                    api.update_status(status="Hi "+mention.author.name+", So sad to hear that from you :( Please check your DM and give us the feedback for improvement",in_reply_to_status_id=mention.id,auto_populate_reply_metadata=True)
+                    api.send_direct_message(recipient_id=mention.author.id,text="Hi "+mention.author.name+", Please fill the below attached feedback form and help us improve :)")
+                except Exception as err:
+                    print(err)
+        mention_id = mention.id
     time.sleep(5)
 
-# if api.destroy_friendship(id=api.get_user(screen_name="Sreya_TV").id):
-#     print ("Followed")
-# else:
-#     print ("Not Followed")
-
-# tweets = api.user_timeline(id=my_id)
-# for tweet in tweets:
-#     print(str(tweet.id)+'-'+tweet.text)
 
 
 
+### positive
+## <0.3 
+# like 
 
+## >0.3
+# retweet
+# like
+# appreciate tweet
 
-# while 1 :
-#     mentions=api.mentions_timeline(since_id=mention_id)
-#     for mention in mentions:
-#         if mention.created_at.timestamp()<time.time():
-#             continue
-#         print("Mention tweet found!")
-#         mention_id = mention.id
-#         if mention.author.id != my_id and mention.in_reply_to_status_id is None:
-#             api.send_direct_message(mention.author.id,message)
-#             try:
-#                 api.update_status(reply,in_reply_to_mention_status_id=mention.id_str)
-#                 print("replying")
-#             except:
-#                 print("failed")
-
-
-
-# while 1:
-#     mentions = api.mentions_timeline()
-#     for mention in mentions:
-#         print(mention.author.id)
-
+## negative
+# send dm 
+# apology reply
