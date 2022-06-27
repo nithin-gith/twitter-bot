@@ -41,6 +41,8 @@ FILE_NAME = "last_id.txt"
 my_id = int(api.get_user(screen_name="bot_jff").id_str)
 mention_id=get_last_id(FILE_NAME)
 
+qns=['how','why','when','what','whose','?']
+
 while True:
     mentions = api.mentions_timeline(since_id=mention_id)
     for mention in mentions:
@@ -51,7 +53,13 @@ while True:
         analysis_polarity = text_analysis.sentiment.polarity
         print(analysis_polarity)
         if mention.in_reply_to_status_id is None and mention.author.id != my_id:
-            if analysis_polarity>=0:
+            if True in [word in mention.text.lower() for word in qns] :
+                try:
+                    api.update_status(status="Hi "+mention.author.name+", Feel free to send us a DM if you have any queries :)",in_reply_to_status_id=mention.id,auto_populate_reply_metadata=True)
+                    print("reply sent")
+                except Exception as err:
+                    print(err)
+            elif analysis_polarity>=0:
                 if analysis_polarity<0.3:
                     try:
                         api.create_favorite(id=mention.id)
