@@ -73,7 +73,7 @@ while True:
                     print(err)
         mention_id=mention.id
         set_last_id(FILE_NAME,mention.id)
-    time.sleep(5)
+    time.sleep(10)
 
 
 
